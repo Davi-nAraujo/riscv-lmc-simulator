@@ -10,6 +10,8 @@ const maquina = new MachineState();
 let workspace = null;
 let animando  = false;   // trava p/ não sobrepor animações
 let programaCarregado = false;
+let desafioAtual = 0;
+let cenarioAtual = { entrada: [], memoria: {} };   // I/O + memória do desafio atual
 
 /* Tema escuro do Blockly, para combinar com o painel do simulador. */
 const TEMA_RISCV = Blockly.Theme.defineTheme('riscv-dark', {
@@ -40,23 +42,58 @@ function iniciarBlockly() {
     grid: { spacing: 22, length: 3, colour: '#21262d', snap: true },
     zoom: { controls: true, wheel: true, startScale: 0.95 },
   });
-  carregarExemplo();
 }
 
-/* Um programinha de exemplo: lê 2 números, soma e mostra. */
-function carregarExemplo() {
-  const xml = `
-    <xml>
-      <block type="riscv_ler_entrada"><field name="RD">1</field><next>
-      <block type="riscv_ler_entrada"><field name="RD">2</field><next>
-      <block type="riscv_somar">
-        <field name="RD">3</field><field name="RS1">1</field><field name="RS2">2</field>
-      <next>
-      <block type="riscv_mostrar_saida"><field name="RS">3</field></block>
-      </next></block></next></block></next></block>
-    </xml>`;
-  const dom = Blockly.utils.xml.textToDom(xml);
+/* ---------- Desafios ---------- */
+
+/* Preenche o seletor de desafios. */
+function montarSeletorDesafios() {
+  const sel = document.getElementById('sel-desafio');
+  sel.innerHTML = DESAFIOS.map((d, i) => `<option value="${i}">${d.titulo}</option>`).join('');
+  sel.addEventListener('change', () => selecionarDesafio(parseInt(sel.value, 10)));
+}
+
+/* Carrega o cenário (entrada da I/O + memória) do desafio na máquina,
+   sem nenhum programa — só para a pessoa ver os dados de partida. */
+function prepararCenario() {
+  maquina.reset();
+  maquina.definirEntrada(cenarioAtual.entrada);
+  Object.entries(cenarioAtual.memoria).forEach(([e, v]) => { maquina.memoria[+e] = v; });
+  programaCarregado = false;
+  animando = false;
+  limparDestaques();
+  document.getElementById('ula-visor').textContent = '—';
+  try { workspace.highlightBlock(null); } catch (_) {}
+  atualizarValores();
+}
+
+/* Seleciona um desafio: mostra o enunciado e prepara o editor.
+   comSolucao=true já revela a solução (usado na demonstração inicial). */
+function selecionarDesafio(idx, { comSolucao = false } = {}) {
+  desafioAtual = idx;
+  const d = DESAFIOS[idx];
+  cenarioAtual = { entrada: d.entrada.slice(), memoria: { ...d.memoria } };
+  document.getElementById('sel-desafio').value = String(idx);
+  document.getElementById('desafio-enunciado').textContent = d.enunciado;
+  document.getElementById('desafio-esperado').textContent = 'Esperado — ' + d.esperado;
+  workspace.clear();
+  if (comSolucao) {
+    carregarSolucao();
+  } else {
+    prepararCenario();
+    narrar(d.dica ? ('Tente montar você mesmo. Dica: ' + d.dica)
+                  : 'Monte seu programa e clique em "Passo".');
+  }
+}
+
+/* Revela a solução do desafio atual no editor. */
+function carregarSolucao() {
+  const d = DESAFIOS[desafioAtual];
+  workspace.clear();
+  const dom = Blockly.utils.xml.textToDom(programaXml(d.solucao));
   Blockly.Xml.domToWorkspace(dom, workspace);
+  prepararCenario();
+  narrar('Solução carregada. Clique em "Passo" ou "Executar tudo" para acompanhar.');
 }
 
 /* ---------- 2. Desenha o painel de estado (componentes fixos) ---------- */
@@ -128,10 +165,9 @@ function garantirPrograma() {
     return false;
   }
   maquina.carregarPrograma(programa);
-  // Entrada de exemplo: dois valores aguardando no inbox da I/O.
-  maquina.definirEntrada([7, 5]);
-  // Algumas posições de memória pré-carregadas, para o lw ter o que ler.
-  maquina.memoria[10] = 42; maquina.memoria[11] = 8;
+  // Cenário do desafio atual: entrada da I/O e memória pré-carregada.
+  maquina.definirEntrada(cenarioAtual.entrada);
+  Object.entries(cenarioAtual.memoria).forEach(([e, v]) => { maquina.memoria[+e] = v; });
   atualizarValores();
   programaCarregado = true;
   return true;
@@ -167,15 +203,9 @@ async function rodarTudo() {
   }
 }
 
-/* Reinicia: limpa o estado mas mantém os blocos. */
+/* Reinicia: limpa o estado (recarrega o cenário) mas mantém os blocos. */
 function reiniciar() {
-  animando = false;
-  programaCarregado = false;
-  maquina.reset();
-  limparDestaques();
-  document.getElementById('ula-visor').textContent = '—';
-  try { workspace.highlightBlock(null); } catch (_) {}
-  atualizarValores();
+  prepararCenario();
   narrar('Estado reiniciado. Clique em "Passo" para começar.');
 }
 
@@ -205,8 +235,11 @@ window.addEventListener('load', () => {
   iniciarBlockly();
   montarPaineis();
   montarDicionario();
-  atualizarValores();
+  montarSeletorDesafios();
+  selecionarDesafio(0, { comSolucao: true });   // demo inicial: 1º desafio resolvido
   document.getElementById('btn-passo').addEventListener('click', passo);
   document.getElementById('btn-rodar').addEventListener('click', rodarTudo);
   document.getElementById('btn-reset').addEventListener('click', reiniciar);
+  document.getElementById('btn-tentar').addEventListener('click', () => selecionarDesafio(desafioAtual));
+  document.getElementById('btn-solucao').addEventListener('click', carregarSolucao);
 });

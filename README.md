@@ -57,8 +57,25 @@ Depois abra <http://localhost:8000>.
 | `beq  rs1, rs2, label`   | *Branch if equal*: se `rs1 == rs2`, o PC desvia para `label`.  |
 | `label:`                 | Rótulo, alvo de `beq`. Não gera instrução.                     |
 
-O programa de exemplo lê dois valores da Entrada (`[7, 5]`), soma-os e envia o
-resultado para a Saída.
+---
+
+## Desafios
+
+A coluna do editor traz um seletor de **desafios** propostos. A ideia é
+**tentar resolver primeiro**: escolha um desafio, leia o enunciado (e o resultado
+esperado), monte seu programa e execute. Cada desafio já configura seu próprio
+cenário (valores na Entrada e na memória).
+
+- **Tentar do zero** — limpa o editor para você montar a sua solução.
+- **Ver solução** — se travar, revela uma solução pronta no editor.
+
+| # | Desafio                          | Conceito                                  |
+| - | -------------------------------- | ----------------------------------------- |
+| 1 | Soma de dois números             | `in`, `add`, `out`                        |
+| 2 | Dobro de um número               | somar um registrador com ele mesmo        |
+| 3 | Diferença (a − b)                | `sub` e ordem dos operandos               |
+| 4 | Memória: ler, alterar, guardar   | `lw` / `sw` (ciclo load–modify–store)     |
+| 5 | Laço com `beq`: contagem regressiva | rótulos, desvio condicional e salto incondicional (`beq x0, x0, loop`) |
 
 ---
 
@@ -70,11 +87,12 @@ camada de UI as reproduz com calma.
 
 | Arquivo        | Papel                                                                 |
 | -------------- | --------------------------------------------------------------------- |
-| `machine.js`   | O "cérebro". `MachineState` guarda todo o estado e `executarPasso()` executa uma instrução, devolvendo as fases da animação (sem mexer no DOM). |
+| `machine.js`   | O motor lógico. `MachineState` guarda todo o estado e `executarPasso()` executa uma instrução, devolvendo as fases da animação (sem mexer no DOM). |
 | `blocks.js`    | Define os blocos do Blockly e o "montador": `montarPrograma()` lê os blocos encaixados e gera a lista de instruções (IR). |
-| `app.js`       | A cola: inicia o Blockly, desenha a cidade, anima fase a fase e liga os botões. |
-| `index.html`   | Layout em 3 colunas (guia / blocos / cidade) + toolbox do Blockly.    |
-| `styles.css`   | Estilos.                                                              |
+| `examples.js`  | Os desafios propostos, seus cenários e soluções; `programaXml()` converte uma solução em blocos do Blockly. |
+| `app.js`       | A camada que liga tudo: inicia o editor, desenha o painel de estado, anima fase a fase, controla os desafios e liga os botões. |
+| `index.html`   | Layout em 3 colunas (guia / editor / estado do processador) + toolbox do Blockly. |
+| `styles.css`   | Tema escuro (estilo debugger).                                        |
 
 ### Fluxo
 
@@ -99,15 +117,15 @@ aluno ver a causa antes do efeito.
 
 ## Controles
 
-- **Passo a Passo** — executa uma instrução (com todas as suas fases animadas).
-- **Rodar Tudo** — executa até o fim.
-- **Reiniciar** — limpa o estado, mantém os blocos.
+- **Passo** — executa uma instrução (com todas as suas fases animadas).
+- **Executar tudo** — executa até o fim.
+- **Reiniciar** — recarrega o cenário e zera o estado, mantendo os blocos.
 - **Velocidade** — ajusta o tempo de cada fase.
 
 ---
 
 ## Limitações conhecidas
 
-- O cenário inicial é fixo: Entrada `[7, 5]` e `memória[10]=42`, `memória[11]=8`.
+- O cenário (Entrada e memória) é definido por desafio, não editável pela UI.
 - Apenas a primeira pilha de blocos é executada (pilhas soltas são ignoradas).
 - Aritmética de 32 bits truncada (`| 0`); sem overflow/flags.

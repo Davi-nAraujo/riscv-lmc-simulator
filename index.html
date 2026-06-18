@@ -67,6 +67,19 @@
     <!-- ================= COLUNA 2: EDITOR ================= -->
     <section class="col col-editor">
       <h2>Programa</h2>
+
+      <div class="desafio">
+        <div class="desafio-bar">
+          <select id="sel-desafio" title="Escolha um desafio"></select>
+          <div class="desafio-acoes">
+            <button id="btn-tentar" class="btn-mini" title="Limpa o editor para você tentar">Tentar do zero</button>
+            <button id="btn-solucao" class="btn-mini btn-mini-sol" title="Carrega a solução pronta">Ver solução</button>
+          </div>
+        </div>
+        <p id="desafio-enunciado" class="desafio-enunciado"></p>
+        <p id="desafio-esperado" class="desafio-esperado"></p>
+      </div>
+
       <div id="blocklyDiv"></div>
     </section>
 
@@ -154,6 +167,7 @@
 
   <script src="machine.js"></script>
   <script src="blocks.js"></script>
+  <script src="examples.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
