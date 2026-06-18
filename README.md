@@ -1,12 +1,11 @@
-# Simulador RISC-V • estilo Little Man Computer
+# Simulador RISC-V
 
-Um simulador de assembly **RISC-V** que roda no navegador e usa a metáfora do
-**Little Man Computer (LMC)** — a *"Cidade do Computador"* — para ensinar como uma
-CPU funciona por dentro.
-
-Você monta o programa **encaixando blocos** (estilo Scratch, via
-[Blockly](https://developers.google.com/blockly)) e assiste a informação se mover
-**passo a passo** pela cidade, com narração em português a cada fase.
+Um simulador de assembly **RISC-V** que roda no navegador. Você monta o programa
+**encaixando instruções** (editor de blocos via
+[Blockly](https://developers.google.com/blockly)) e executa o
+**ciclo busca–decodificação–execução** passo a passo, acompanhando o estado do
+**PC**, dos **registradores**, da **ULA**, da **memória** e da **I/O** a cada
+instrução, com narração técnica em português.
 
 Projeto da disciplina de **Organização de Computadores** (3º período).
 
@@ -32,36 +31,34 @@ Depois abra <http://localhost:8000>.
 
 ---
 
-## A metáfora da "Cidade do Computador"
+## Componentes do processador
 
-| Personagem da cidade        | Conceito real             |
-| --------------------------- | ------------------------- |
-| **Armários**                | Memória de dados (24 células) |
-| **Caixas de Mão**           | Registradores (`x0`–`x7`, `x0` sempre 0) |
-| **Calculadora**             | ULA / ALU                 |
-| **Contador (seta)**         | Program Counter (PC)      |
-| **Caixa de Entrada/Saída**  | I/O (inbox / outbox)      |
+| Componente            | Descrição                                                  |
+| --------------------- | ---------------------------------------------------------- |
+| **PC**                | *Program Counter*: aponta para a próxima instrução.        |
+| **Registradores**     | `x0`–`x7`, armazenamento rápido. `x0` é fixo em 0 (RISC-V).|
+| **ULA**               | Unidade Lógica e Aritmética: soma, subtrai e compara.      |
+| **Memória**           | `MEM[0]`–`MEM[23]`, dados endereçados.                     |
+| **Entrada / Saída**   | Fluxos de I/O (*inbox* e *outbox*).                        |
 
 ---
 
 ## Conjunto de instruções
 
-Cada bloco tem um nome amigável em português mapeado para um mnemônico RISC-V real:
+| Sintaxe                  | O que faz                                                       |
+| ------------------------ | -------------------------------------------------------------- |
+| `in   rd`                | Lê o próximo valor da Entrada (I/O) no registrador `rd`.        |
+| `lw   rd, MEM[end]`      | *Load word*: carrega `MEM[end]` em `rd`.                        |
+| `sw   rs, MEM[end]`      | *Store word*: escreve `rs` em `MEM[end]`.                       |
+| `out  rs`                | Envia o valor de `rs` para a Saída (I/O).                       |
+| `addi rd, rs, imm`       | `rd = rs + imm` (soma com imediato, via ULA).                  |
+| `add  rd, rs1, rs2`      | `rd = rs1 + rs2` (via ULA).                                     |
+| `sub  rd, rs1, rs2`      | `rd = rs1 - rs2` (via ULA).                                     |
+| `beq  rs1, rs2, label`   | *Branch if equal*: se `rs1 == rs2`, o PC desvia para `label`.  |
+| `label:`                 | Rótulo, alvo de `beq`. Não gera instrução.                     |
 
-| Bloco                | Assembly | O que faz                                   |
-| -------------------- | -------- | ------------------------------------------- |
-| Ler Entrada          | `in`     | Lê um número da Entrada para um registrador |
-| Carregar da Memória  | `lw`     | Copia um armário para um registrador        |
-| Guardar na Memória   | `sw`     | Copia um registrador para um armário        |
-| Mostrar Saída        | `out`    | Envia um registrador para a Saída           |
-| Somar Número         | `addi`   | Soma um número fixo a um registrador        |
-| Somar                | `add`    | Soma dois registradores                     |
-| Subtrair             | `sub`    | Subtrai dois registradores                  |
-| Pular se Igual       | `beq`    | Desvia para um rótulo se dois reg. forem iguais |
-| Rótulo               | *(label)*| Alvo de um `beq`                            |
-
-O programa de exemplo lê dois números da Entrada (`[7, 5]`), soma-os e mostra o
-resultado.
+O programa de exemplo lê dois valores da Entrada (`[7, 5]`), soma-os e envia o
+resultado para a Saída.
 
 ---
 

@@ -1,9 +1,9 @@
 /* ============================================================
- *  app.js — A "cola" que liga tudo:
- *   - inicia o Blockly
- *   - desenha a Cidade do Computador (painel LMC)
+ *  app.js — A camada que liga tudo:
+ *   - inicia o editor Blockly
+ *   - desenha o painel de estado do processador
  *   - anima o fluxo de dados, fase por fase
- *   - controla Passo a Passo / Rodar Tudo / Reiniciar
+ *   - controla Passo / Executar tudo / Reiniciar
  * ============================================================ */
 
 const maquina = new MachineState();
@@ -11,13 +11,33 @@ let workspace = null;
 let animando  = false;   // trava p/ não sobrepor animações
 let programaCarregado = false;
 
+/* Tema escuro do Blockly, para combinar com o painel do simulador. */
+const TEMA_RISCV = Blockly.Theme.defineTheme('riscv-dark', {
+  base: Blockly.Themes.Classic,
+  componentStyles: {
+    workspaceBackgroundColour: '#0d1117',
+    toolboxBackgroundColour: '#161b22',
+    toolboxForegroundColour: '#e6edf3',
+    flyoutBackgroundColour: '#161b22',
+    flyoutForegroundColour: '#8b949e',
+    flyoutOpacity: 1,
+    scrollbarColour: '#364150',
+    insertionMarkerColour: '#58a6ff',
+    insertionMarkerOpacity: 0.4,
+    cursorColour: '#58a6ff',
+    selectedGlowColour: '#58a6ff',
+  },
+  fontStyle: { family: 'JetBrains Mono, monospace', size: 11 },
+});
+
 /* ---------- 1. Inicia o Blockly ---------- */
 function iniciarBlockly() {
   workspace = Blockly.inject('blocklyDiv', {
     toolbox: document.getElementById('toolbox'),
+    theme: TEMA_RISCV,
     scrollbars: true,
     trashcan: true,
-    grid: { spacing: 22, length: 3, colour: '#e5e7eb', snap: true },
+    grid: { spacing: 22, length: 3, colour: '#21262d', snap: true },
     zoom: { controls: true, wheel: true, startScale: 0.95 },
   });
   carregarExemplo();
@@ -39,19 +59,19 @@ function carregarExemplo() {
   Blockly.Xml.domToWorkspace(dom, workspace);
 }
 
-/* ---------- 2. Desenha a Cidade (painéis fixos) ---------- */
+/* ---------- 2. Desenha o painel de estado (componentes fixos) ---------- */
 function montarPaineis() {
-  // Registradores (Caixas de Mão)
+  // Registradores x0..x7
   const reg = document.getElementById('reg-grid');
   reg.innerHTML = '';
   for (let i = 0; i < NUM_REGISTRADORES; i++) {
     reg.insertAdjacentHTML('beforeend', `
-      <div class="reg-cel" id="reg-${i}">
+      <div class="reg-cel${i === 0 ? ' reg-zero' : ''}" id="reg-${i}">
         <div class="reg-nome">x${i}</div>
         <div class="reg-valor" id="reg-${i}-v">0</div>
       </div>`);
   }
-  // Memória (Armários)
+  // Memória de dados MEM[0..23]
   const mem = document.getElementById('mem-grid');
   mem.innerHTML = '';
   for (let i = 0; i < NUM_ARMARIOS; i++) {
@@ -104,13 +124,13 @@ function garantirPrograma() {
   if (programaCarregado && !maquina.acabou()) return true;
   const programa = montarPrograma(workspace);
   if (programa.length === 0) {
-    narrar('Seu programa está vazio. Arraste alguns blocos primeiro!');
+    narrar('Programa vazio. Arraste instruções para o editor primeiro.');
     return false;
   }
   maquina.carregarPrograma(programa);
-  // Entrada de exemplo: dois números esperando na caixa de entrada.
+  // Entrada de exemplo: dois valores aguardando no inbox da I/O.
   maquina.definirEntrada([7, 5]);
-  // Alguns armários já vêm com valores, para o "Carregar" ter o que mostrar.
+  // Algumas posições de memória pré-carregadas, para o lw ter o que ler.
   maquina.memoria[10] = 42; maquina.memoria[11] = 8;
   atualizarValores();
   programaCarregado = true;
@@ -121,7 +141,7 @@ function garantirPrograma() {
 async function passo() {
   if (animando) return;
   if (!garantirPrograma()) return;
-  if (maquina.acabou()) { narrar('Programa terminado. Clique em Reiniciar para rodar de novo.'); return; }
+  if (maquina.acabou()) { narrar('Execução concluída. Clique em Reiniciar para rodar novamente.'); return; }
 
   animando = true;
   const idAtual = maquina.programa[maquina.pc]?.blockId;
@@ -132,7 +152,7 @@ async function passo() {
 
   try { workspace.highlightBlock(null); } catch (_) {}
   limparDestaques();
-  if (maquina.acabou()) narrar('Programa terminado. Clique em Reiniciar para rodar de novo.');
+  if (maquina.acabou()) narrar('Execução concluída. Clique em Reiniciar para rodar novamente.');
   animando = false;
   return fim;
 }
@@ -156,30 +176,35 @@ function reiniciar() {
   document.getElementById('ula-visor').textContent = '—';
   try { workspace.highlightBlock(null); } catch (_) {}
   atualizarValores();
-  narrar('Reiniciado. Clique em "Passo a Passo" para começar.');
+  narrar('Estado reiniciado. Clique em "Passo" para começar.');
 }
 
-/* ---------- 4. Glossário interativo ---------- */
-const GLOSSARIO = [
-  ['in', 'Ler Entrada: pega o próximo número da caixa de Entrada e coloca numa caixa de mão (registrador).'],
-  ['lw', 'Carregar da Memória: abre um armário e copia o número dele para uma caixa de mão.'],
-  ['sw', 'Guardar na Memória: pega o número de uma caixa de mão e tranca dentro de um armário.'],
-  ['add / sub', 'Somar / Subtrair: leva dois valores até a Calculadora (ULA) e guarda o resultado numa caixa.'],
-  ['addi', 'Somar Número: soma um número fixo (que você digita no bloco) a uma caixa.'],
-  ['beq', 'Pular se Igual: compara duas caixas. Se forem iguais, o Contador (PC) pula para um rótulo.'],
-  ['out', 'Mostrar Saída: leva o número de uma caixa até a caixa de Saída para você ver o resultado.'],
+/* ---------- 4. Dicionário de Assembly ---------- */
+const DICIONARIO = [
+  ['in',   'rd',              'Lê o próximo valor da Entrada (I/O) e escreve no registrador rd.'],
+  ['lw',   'rd, MEM[end]',    'Load word: carrega o conteúdo da posição end da memória no registrador rd.'],
+  ['sw',   'rs, MEM[end]',    'Store word: escreve o valor do registrador rs na posição end da memória.'],
+  ['out',  'rs',              'Envia o valor do registrador rs para a Saída (I/O).'],
+  ['addi', 'rd, rs, imm',     'Soma o imediato imm ao registrador rs: rd = rs + imm (operação da ULA).'],
+  ['add',  'rd, rs1, rs2',    'rd = rs1 + rs2, calculado pela ULA.'],
+  ['sub',  'rd, rs1, rs2',    'rd = rs1 − rs2, calculado pela ULA.'],
+  ['beq',  'rs1, rs2, label', 'Branch if equal: se rs1 == rs2, o PC desvia para label; senão, segue em sequência.'],
+  ['label', ':',              'Rótulo. Marca uma posição no programa, alvo de beq. Não gera instrução.'],
 ];
-function montarGlossario() {
-  const div = document.getElementById('glossario');
-  div.innerHTML = GLOSSARIO.map(([n, d]) =>
-    `<div class="gloss-item"><span class="gloss-nome">${n}:</span> ${d}</div>`).join('');
+function montarDicionario() {
+  const div = document.getElementById('dicionario');
+  div.innerHTML = DICIONARIO.map(([mn, args, desc]) =>
+    `<div class="dic-item">
+       <span class="dic-sintaxe"><span class="mn">${mn}</span> ${args}</span>
+       <span class="dic-desc">${desc}</span>
+     </div>`).join('');
 }
 
 /* ---------- 5. Liga os botões e inicia ---------- */
 window.addEventListener('load', () => {
   iniciarBlockly();
   montarPaineis();
-  montarGlossario();
+  montarDicionario();
   atualizarValores();
   document.getElementById('btn-passo').addEventListener('click', passo);
   document.getElementById('btn-rodar').addEventListener('click', rodarTudo);

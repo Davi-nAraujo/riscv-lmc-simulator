@@ -3,108 +3,130 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simulador RISC-V • estilo Little Man Computer</title>
+  <title>Simulador RISC-V</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <!-- Blockly via CDN: roda 100% no navegador, sem build -->
   <script src="https://unpkg.com/blockly/blockly.min.js"></script>
 </head>
 <body>
   <header class="topbar">
-    <h1>Simulador RISC-V <span class="sub">com a Cidade do Computador (estilo LMC)</span></h1>
+    <div class="brand">
+      <h1>Simulador RISC-V</h1>
+      <span class="sub">Organização de Computadores · ciclo busca–decodificação–execução</span>
+    </div>
     <div class="controls">
-      <button id="btn-passo" class="btn btn-passo">Passo a Passo</button>
-      <button id="btn-rodar" class="btn btn-rodar">Rodar Tudo</button>
+      <button id="btn-passo" class="btn btn-passo">Passo</button>
+      <button id="btn-rodar" class="btn btn-rodar">Executar tudo</button>
       <button id="btn-reset" class="btn btn-reset">Reiniciar</button>
       <label class="vel">
-        Velocidade
+        <span>Velocidade</span>
         <input id="velocidade" type="range" min="200" max="1600" value="700" step="100" />
       </label>
     </div>
   </header>
 
   <main class="layout">
-    <!-- ================= COLUNA 1: PAINEL DIDÁTICO ================= -->
-    <aside class="col col-didatico">
+    <!-- ================= COLUNA 1: GUIA ================= -->
+    <aside class="col col-guia">
       <h2>Guia</h2>
 
       <section class="card">
-        <h3>Como funciona?</h3>
-        <p>Monte um programa encaixando <strong>blocos</strong> no centro.
-           Cada bloco é uma ordem para o computador. Clique em
-           <strong>Passo a Passo</strong> e observe a informação se movendo
-           pela "cidade" à direita.</p>
+        <h3>Sobre</h3>
+        <p>Monte um programa em <strong>assembly RISC-V</strong> encaixando
+           instruções. Execute em <strong>Passo</strong> para acompanhar o ciclo
+           de cada instrução e observar o estado do <strong>PC</strong>,
+           dos <strong>registradores</strong>, da <strong>ULA</strong>,
+           da <strong>memória</strong> e da <strong>I/O</strong>.</p>
       </section>
 
       <section class="card">
-        <h3>Os personagens da cidade</h3>
+        <h3>Componentes</h3>
         <ul class="legenda">
-          <li><span class="dot dot-mem"></span><strong>Armários</strong> — a Memória. Cada armário tem um número e guarda um valor.</li>
-          <li><span class="dot dot-reg"></span><strong>Caixas de Mão</strong> — os Registradores. Lugares rápidos onde o computador segura valores para trabalhar.</li>
-          <li><span class="dot dot-ula"></span><strong>Calculadora</strong> — a ULA. Faz contas (somar, subtrair).</li>
-          <li><span class="dot dot-pc"></span><strong>Contador (PC)</strong> — uma seta que aponta qual ordem é a próxima.</li>
-          <li><span class="dot dot-io"></span><strong>Entrada / Saída</strong> — a caixa de cartas que chega e a que sai.</li>
+          <li><span class="dot dot-pc"></span><strong>PC</strong> — <em>Program Counter</em>. Registrador que aponta para a próxima instrução.</li>
+          <li><span class="dot dot-reg"></span><strong>Registradores</strong> — <code>x0</code>–<code>x7</code>, armazenamento rápido. <code>x0</code> é fixo em 0 (RISC-V).</li>
+          <li><span class="dot dot-ula"></span><strong>ULA</strong> — Unidade Lógica e Aritmética. Soma, subtrai e compara.</li>
+          <li><span class="dot dot-mem"></span><strong>Memória</strong> — <code>MEM[0]</code>–<code>MEM[23]</code>, dados endereçados.</li>
+          <li><span class="dot dot-io"></span><strong>Entrada / Saída</strong> — fluxos de I/O (<em>inbox</em> e <em>outbox</em>).</li>
         </ul>
       </section>
 
       <section class="card">
-        <h3>Glossário das ordens</h3>
-        <div id="glossario"></div>
+        <h3>Dicionário de Assembly</h3>
+        <div id="dicionario"></div>
       </section>
 
-      <section class="card card-passo">
-        <h3>O que está acontecendo agora</h3>
-        <p id="narrador" class="narrador">Monte um programa e clique em "Passo a Passo".</p>
+      <section class="card card-exec">
+        <h3>Execução</h3>
+        <p id="narrador" class="narrador">Monte um programa e clique em "Passo".</p>
       </section>
     </aside>
 
-    <!-- ================= COLUNA 2: BLOCKLY ================= -->
-    <section class="col col-blocos">
-      <h2>Seu Programa</h2>
+    <!-- ================= COLUNA 2: EDITOR ================= -->
+    <section class="col col-editor">
+      <h2>Programa</h2>
       <div id="blocklyDiv"></div>
     </section>
 
-    <!-- ================= COLUNA 3: PAINEL LMC ================= -->
-    <aside class="col col-lmc">
-      <h2>A Cidade do Computador</h2>
+    <!-- ================= COLUNA 3: ESTADO DA MÁQUINA ================= -->
+    <aside class="col col-estado">
+      <h2>Estado do Processador</h2>
 
-      <div class="lmc-grid">
-        <!-- Contador de Programa -->
-        <div class="lmc-box pc-box" id="pc-box">
-          <div class="lmc-titulo">Contador (PC)</div>
+      <div class="estado-grid">
+        <!-- Program Counter -->
+        <div class="comp-box pc-box" id="pc-box">
+          <div class="comp-head">
+            <span class="comp-titulo">Program Counter</span>
+            <span class="comp-tag">PC</span>
+          </div>
           <div class="pc-valor" id="pc-valor">0</div>
-          <div class="lmc-ajuda">próxima ordem</div>
+          <div class="comp-ajuda">próxima instrução</div>
         </div>
 
-        <!-- Calculadora / ULA -->
-        <div class="lmc-box ula-box" id="ula-box">
-          <div class="lmc-titulo">Calculadora (ULA)</div>
+        <!-- ULA -->
+        <div class="comp-box ula-box" id="ula-box">
+          <div class="comp-head">
+            <span class="comp-titulo">Unidade Lógica e Aritmética</span>
+            <span class="comp-tag">ULA</span>
+          </div>
           <div class="ula-visor" id="ula-visor">—</div>
         </div>
 
         <!-- Registradores -->
-        <div class="lmc-box reg-box">
-          <div class="lmc-titulo">Caixas de Mão (Registradores)</div>
+        <div class="comp-box reg-box">
+          <div class="comp-head">
+            <span class="comp-titulo">Registradores</span>
+            <span class="comp-tag">x0–x7</span>
+          </div>
           <div class="reg-grid" id="reg-grid"><!-- preenchido via JS --></div>
         </div>
 
         <!-- Entrada e Saída -->
-        <div class="lmc-box io-box">
-          <div class="lmc-titulo">Entrada / Saída</div>
+        <div class="comp-box io-box">
+          <div class="comp-head">
+            <span class="comp-titulo">Entrada / Saída</span>
+            <span class="comp-tag">I/O</span>
+          </div>
           <div class="io-linha">
             <div class="io-col">
-              <span class="io-label">Entrada (Inbox)</span>
+              <span class="io-label">Entrada (inbox)</span>
               <div class="io-fila" id="inbox"></div>
             </div>
             <div class="io-col">
-              <span class="io-label">Saída (Outbox)</span>
+              <span class="io-label">Saída (outbox)</span>
               <div class="io-fila" id="outbox"></div>
             </div>
           </div>
         </div>
 
         <!-- Memória -->
-        <div class="lmc-box mem-box">
-          <div class="lmc-titulo">Armários (Memória)</div>
+        <div class="comp-box mem-box">
+          <div class="comp-head">
+            <span class="comp-titulo">Memória de dados</span>
+            <span class="comp-tag">MEM[0–23]</span>
+          </div>
           <div class="mem-grid" id="mem-grid"><!-- preenchido via JS --></div>
         </div>
       </div>
@@ -113,18 +135,18 @@
 
   <!-- Toolbox do Blockly (XML) -->
   <xml id="toolbox" style="display: none">
-    <category name="Dados" colour="#5C81A6">
+    <category name="Memória &amp; I/O" colour="#3b6ea5">
       <block type="riscv_ler_entrada"></block>
       <block type="riscv_carregar"></block>
       <block type="riscv_guardar"></block>
       <block type="riscv_mostrar_saida"></block>
     </category>
-    <category name="Contas" colour="#A65C81">
+    <category name="Aritmética (ULA)" colour="#a05252">
       <block type="riscv_somar_numero"></block>
       <block type="riscv_somar"></block>
       <block type="riscv_subtrair"></block>
     </category>
-    <category name="Decisões" colour="#5CA68D">
+    <category name="Controle de fluxo" colour="#4f8a6d">
       <block type="riscv_pular_se_igual"></block>
       <block type="riscv_marcador"></block>
     </category>
