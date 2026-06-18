@@ -96,7 +96,16 @@ em { font-style: normal; color: var(--muted); }
 }
 .card h3 { margin: 0 0 8px; font-size: .82rem; font-weight: 600; color: var(--text); }
 .card p { margin: 0; font-size: .8rem; line-height: 1.55; color: var(--muted); }
+.card p + p { margin-top: 8px; }
 .card p strong { color: var(--text); font-weight: 600; }
+
+/* Cartão de introdução (abordagem LMC) — destaque sutil para o stand */
+.card-lmc { border-left: 3px solid var(--accent); }
+.card-lmc h3 { color: var(--accent); }
+.lmc-cta {
+  margin-top: 10px !important; padding-top: 9px;
+  border-top: 1px solid var(--border); color: var(--text) !important;
+}
 
 .legenda { list-style: none; padding: 0; margin: 0; font-size: .78rem; }
 .legenda li { margin-bottom: 9px; line-height: 1.45; color: var(--muted); }

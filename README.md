@@ -7,6 +7,12 @@ Um simulador de assembly **RISC-V** que roda no navegador. Você monta o program
 **PC**, dos **registradores**, da **ULA**, da **memória** e da **I/O** a cada
 instrução, com narração técnica em português.
 
+Ele segue a abordagem do **Little Man Computer (LMC)** — um modelo didático de
+computador mínimo que deixa visíveis as peças essenciais de uma CPU e executa
+uma instrução de cada vez — mas com instruções RISC-V reais. A própria interface
+é autoexplicativa: pensada para uma apresentação de stand, sem precisar de
+slides ou pôster.
+
 Projeto da disciplina de **Organização de Computadores** (3º período).
 
 ---
