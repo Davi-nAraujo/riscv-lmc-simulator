@@ -269,6 +269,14 @@ function reiniciar() {
   narrar('Estado reiniciado. Clique em "Passo" para começar.');
 }
 
+/* Limpa o estado: zera Entrada, memória e registradores (mantém os blocos). */
+function limparEstado() {
+  cenarioAtual = { entrada: [], memoria: {}, registradores: {} };
+  document.getElementById('inbox-edit').value = '';
+  prepararCenario();
+  narrar('Estado zerado: Entrada vazia, memória e registradores em 0. Os blocos foram mantidos.');
+}
+
 /* ---------- 4. Dicionário de Assembly ---------- */
 const DICIONARIO = [
   ['in',   'rd',              'Lê o próximo valor da Entrada (I/O) e escreve no registrador rd.'],
@@ -300,6 +308,7 @@ window.addEventListener('load', () => {
   document.getElementById('btn-passo').addEventListener('click', passo);
   document.getElementById('btn-rodar').addEventListener('click', rodarTudo);
   document.getElementById('btn-reset').addEventListener('click', reiniciar);
+  document.getElementById('btn-limpar').addEventListener('click', limparEstado);
   document.getElementById('btn-tentar').addEventListener('click', () => selecionarDesafio(desafioAtual));
   document.getElementById('btn-solucao').addEventListener('click', carregarSolucao);
   document.getElementById('inbox-edit').addEventListener('change', aplicarInboxEditado);

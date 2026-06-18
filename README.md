@@ -120,7 +120,8 @@ aluno ver a causa antes do efeito.
 
 - **Passo** — executa uma instrução (com todas as suas fases animadas).
 - **Executar tudo** — executa até o fim.
-- **Reiniciar** — recarrega o cenário e zera o estado, mantendo os blocos.
+- **Reiniciar** — recarrega o cenário do desafio e zera o estado, mantendo os blocos.
+- **Limpar estado** — zera tudo (Entrada vazia, memória e registradores em 0), mantendo os blocos.
 - **Velocidade** — ajusta o tempo de cada fase.
 
 O estado inicial é editável direto no painel: o campo **Definir entrada**, e os
