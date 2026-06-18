@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador RISC-V • estilo Little Man Computer</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Blockly via CDN: roda 100% no navegador, sem build -->
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Simulador RISC-V <span class="sub">com a Cidade do Computador (estilo LMC)</span></h1>
+    <div class="controls">
+      <button id="btn-passo" class="btn btn-passo">Passo a Passo</button>
+      <button id="btn-rodar" class="btn btn-rodar">Rodar Tudo</button>
+      <button id="btn-reset" class="btn btn-reset">Reiniciar</button>
+      <label class="vel">
+        Velocidade
+        <input id="velocidade" type="range" min="200" max="1600" value="700" step="100" />
+      </label>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- ================= COLUNA 1: PAINEL DIDÁTICO ================= -->
+    <aside class="col col-didatico">
+      <h2>Guia</h2>
+
+      <section class="card">
+        <h3>Como funciona?</h3>
+        <p>Monte um programa encaixando <strong>blocos</strong> no centro.
+           Cada bloco é uma ordem para o computador. Clique em
+           <strong>Passo a Passo</strong> e observe a informação se movendo
+           pela "cidade" à direita.</p>
+      </section>
+
+      <section class="card">
+        <h3>Os personagens da cidade</h3>
+        <ul class="legenda">
+          <li><span class="dot dot-mem"></span><strong>Armários</strong> — a Memória. Cada armário tem um número e guarda um valor.</li>
+          <li><span class="dot dot-reg"></span><strong>Caixas de Mão</strong> — os Registradores. Lugares rápidos onde o computador segura valores para trabalhar.</li>
+          <li><span class="dot dot-ula"></span><strong>Calculadora</strong> — a ULA. Faz contas (somar, subtrair).</li>
+          <li><span class="dot dot-pc"></span><strong>Contador (PC)</strong> — uma seta que aponta qual ordem é a próxima.</li>
+          <li><span class="dot dot-io"></span><strong>Entrada / Saída</strong> — a caixa de cartas que chega e a que sai.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h3>Glossário das ordens</h3>
+        <div id="glossario"></div>
+      </section>
+
+      <section class="card card-passo">
+        <h3>O que está acontecendo agora</h3>
+        <p id="narrador" class="narrador">Monte um programa e clique em "Passo a Passo".</p>
+      </section>
+    </aside>
+
+    <!-- ================= COLUNA 2: BLOCKLY ================= -->
+    <section class="col col-blocos">
+      <h2>Seu Programa</h2>
+      <div id="blocklyDiv"></div>
+    </section>
+
+    <!-- ================= COLUNA 3: PAINEL LMC ================= -->
+    <aside class="col col-lmc">
+      <h2>A Cidade do Computador</h2>
+
+      <div class="lmc-grid">
+        <!-- Contador de Programa -->
+        <div class="lmc-box pc-box" id="pc-box">
+          <div class="lmc-titulo">Contador (PC)</div>
+          <div class="pc-valor" id="pc-valor">0</div>
+          <div class="lmc-ajuda">próxima ordem</div>
+        </div>
+
+        <!-- Calculadora / ULA -->
+        <div class="lmc-box ula-box" id="ula-box">
+          <div class="lmc-titulo">Calculadora (ULA)</div>
+          <div class="ula-visor" id="ula-visor">—</div>
+        </div>
+
+        <!-- Registradores -->
+        <div class="lmc-box reg-box">
+          <div class="lmc-titulo">Caixas de Mão (Registradores)</div>
+          <div class="reg-grid" id="reg-grid"><!-- preenchido via JS --></div>
+        </div>
+
+        <!-- Entrada e Saída -->
+        <div class="lmc-box io-box">
+          <div class="lmc-titulo">Entrada / Saída</div>
+          <div class="io-linha">
+            <div class="io-col">
+              <span class="io-label">Entrada (Inbox)</span>
+              <div class="io-fila" id="inbox"></div>
+            </div>
+            <div class="io-col">
+              <span class="io-label">Saída (Outbox)</span>
+              <div class="io-fila" id="outbox"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Memória -->
+        <div class="lmc-box mem-box">
+          <div class="lmc-titulo">Armários (Memória)</div>
+          <div class="mem-grid" id="mem-grid"><!-- preenchido via JS --></div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Toolbox do Blockly (XML) -->
+  <xml id="toolbox" style="display: none">
+    <category name="Dados" colour="#5C81A6">
+      <block type="riscv_ler_entrada"></block>
+      <block type="riscv_carregar"></block>
+      <block type="riscv_guardar"></block>
+      <block type="riscv_mostrar_saida"></block>
+    </category>
+    <category name="Contas" colour="#A65C81">
+      <block type="riscv_somar_numero"></block>
+      <block type="riscv_somar"></block>
+      <block type="riscv_subtrair"></block>
+    </category>
+    <category name="Decisões" colour="#5CA68D">
+      <block type="riscv_pular_se_igual"></block>
+      <block type="riscv_marcador"></block>
+    </category>
+  </xml>
+
+  <script src="machine.js"></script>
+  <script src="blocks.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
