@@ -127,7 +127,7 @@ aluno ver a causa antes do efeito.
 
 ## Limitações conhecidas
 
-- A Entrada (inbox) é editável pela UI (campo "Definir entrada"); a memória
-  inicial ainda é definida por desafio.
+- A Entrada (inbox) e os valores iniciais da memória são editáveis pela UI
+  (campo "Definir entrada" e clique nas células `MEM[i]`).
 - Apenas a primeira pilha de blocos é executada (pilhas soltas são ignoradas).
 - Aritmética de 32 bits truncada (`| 0`); sem overflow/flags.

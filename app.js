@@ -83,6 +83,14 @@ function aplicarInboxEditado() {
   narrar('Entrada atualizada. Clique em "Passo" para executar com os novos valores.');
 }
 
+/* Define o valor inicial de uma posição de memória e reprepara o cenário. */
+function aplicarMemoriaEditada(end, el) {
+  const v = /^-?\d+$/.test(el.value.trim()) ? parseInt(el.value, 10) : 0;
+  cenarioAtual.memoria[end] = v;
+  prepararCenario();   // reaplica o cenário (inclui o novo valor) e atualiza a tela
+  narrar(`MEM[${end}] definido como ${v}. Clique em "Passo" para executar.`);
+}
+
 /* Seleciona um desafio: mostra o enunciado e prepara o editor.
    comSolucao=true já revela a solução (usado na demonstração inicial). */
 function selecionarDesafio(idx, { comSolucao = false } = {}) {
@@ -125,16 +133,23 @@ function montarPaineis() {
         <div class="reg-valor" id="reg-${i}-v">0</div>
       </div>`);
   }
-  // Memória de dados MEM[0..23]
+  // Memória de dados MEM[0..23] — valores editáveis
   const mem = document.getElementById('mem-grid');
   mem.innerHTML = '';
   for (let i = 0; i < NUM_ARMARIOS; i++) {
     mem.insertAdjacentHTML('beforeend', `
       <div class="mem-cel" id="mem-${i}">
         <div class="mem-end">${i}</div>
-        <div class="mem-valor" id="mem-${i}-v">0</div>
+        <input class="mem-valor mem-input" id="mem-${i}-v" data-end="${i}"
+               inputmode="numeric" value="0"
+               title="Valor inicial de MEM[${i}] — clique para editar" />
       </div>`);
   }
+  // Edição de qualquer célula de memória (delegação de evento).
+  mem.addEventListener('change', (e) => {
+    if (e.target.classList.contains('mem-input'))
+      aplicarMemoriaEditada(parseInt(e.target.dataset.end, 10), e.target);
+  });
 }
 
 /* Atualiza os VALORES na tela a partir do estado da máquina,
@@ -143,8 +158,10 @@ function atualizarValores() {
   document.getElementById('pc-valor').textContent = maquina.pc;
   for (let i = 0; i < NUM_REGISTRADORES; i++)
     document.getElementById(`reg-${i}-v`).textContent = maquina.reg(i);
-  for (let i = 0; i < NUM_ARMARIOS; i++)
-    document.getElementById(`mem-${i}-v`).textContent = maquina.memoria[i];
+  for (let i = 0; i < NUM_ARMARIOS; i++) {
+    const el = document.getElementById(`mem-${i}-v`);
+    if (el !== document.activeElement) el.value = maquina.memoria[i];   // não atrapalha a digitação
+  }
 
   const fichas = (arr) => arr.map(v => `<span class="io-ficha">${v}</span>`).join('');
   document.getElementById('inbox').innerHTML  = fichas(maquina.inbox);
