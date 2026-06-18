@@ -143,3 +143,51 @@ valores das células de **memória** e dos **registradores** (`x0` é fixo em 0)
 
 - Apenas a primeira pilha de blocos é executada (pilhas soltas são ignoradas).
 - Aritmética de 32 bits truncada (`| 0`); sem overflow/flags.
+
+---
+
+## Fidelidade em relação ao RISC-V real
+
+Este é um **modelo didático** na tradição do Little Man Computer, não um emulador
+fiel da ISA. Ele implementa cerca de **9 das ~40** instruções do base RV32I e
+**8 dos 32** registradores. Programas montados aqui **não** montam nem rodam em um
+toolchain RISC-V real — inclusive `in`/`out` não são instruções reais (I/O de
+verdade é feita por mapeamento em memória ou `ecall`). Pense nele como
+"inspirado em RISC-V": ensina o modelo mental, não a ISA exata.
+
+**O que é fiel:**
+
+- **Arquitetura load–store** — a ULA só opera sobre registradores; é preciso
+  `lw`/`sw` para acessar a memória.
+- **`x0` fixo em 0**, com escrita ignorada.
+- **Formatos das instruções** — `add rd, rs1, rs2` (tipo R), `addi rd, rs, imm`
+  (tipo I) e `beq rs1, rs2, label` (tipo B) seguem a semântica real. `addi rd, x0, k`
+  é o idioma real de carregar constante (`li`).
+- **Sem flags de condição** — igual ao RISC-V real (diferente de x86/ARM): não há
+  registrador de flags; comparações ficam dentro dos desvios.
+- Ciclo **buscar → executar → atualizar PC** e rótulos resolvidos para endereços.
+
+**O que está simplificado ou ausente:**
+
+- **Registradores** — só os GPRs inteiros (8, não 32). Sem os papéis da ABI
+  (`sp`, `ra`, `a0–a7`, `s0–s11`, `t0–t6`), sem registradores de ponto flutuante
+  (`f0–f31`) e sem CSRs.
+- **Instruções** — faltam operações lógicas e de deslocamento (`and/or/xor/sll/srl/sra`
+  e imediatos), `lui`/`auipc`, os demais desvios (`bne/blt/bge/…`), os saltos
+  (`jal`/`jalr`), loads/stores de sub-palavra (`lb/lh/sb/sh`), `mul/div` (extensão M)
+  e `ecall/ebreak/fence`.
+- **Endereçamento** — `lw rd, MEM[7]` usa um índice fixo; o real é
+  `lw rd, offset(rs1)` (registrador-base + deslocamento), que permite endereços
+  calculados, ponteiros e vetores.
+- **Chamadas de função e pilha** — não há `jal`/`jalr`, nem `ra`, nem stack pointer.
+  Logo, não existe a convenção de chamada (registradores *caller-saved* que podem
+  ser sobrescritos por uma função chamada, *callee-saved* preservados, quadros de
+  pilha). Aqui os registradores só mudam quando você os escreve explicitamente,
+  sem efeitos colaterais.
+- **Memória por palavra**, indexada diretamente (sem endereçamento por byte).
+
+**Resumo:** ótimo para a intuição de registradores × memória, regra load–store,
+papel do PC, desvios/laços e a ULA como unidade separada. Não prepara para a
+amplitude da ISA real, endereçamento calculado, chamadas de função/pilha, convenções
+da ABI nem montagem/ligação de código real — cobre algo como os primeiros 20–25%
+do caminho até escrever RISC-V de verdade.
