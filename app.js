@@ -67,6 +67,22 @@ function prepararCenario() {
   atualizarValores();
 }
 
+/* Lê o campo de edição da Entrada e devolve só os inteiros válidos. */
+function lerInboxEditado() {
+  return document.getElementById('inbox-edit').value
+    .split(/[\s,]+/)
+    .filter(s => /^-?\d+$/.test(s))
+    .map(Number);
+}
+
+/* Aplica os valores digitados na Entrada e reprepara o cenário. */
+function aplicarInboxEditado() {
+  cenarioAtual.entrada = lerInboxEditado();
+  document.getElementById('inbox-edit').value = cenarioAtual.entrada.join(', ');
+  prepararCenario();
+  narrar('Entrada atualizada. Clique em "Passo" para executar com os novos valores.');
+}
+
 /* Seleciona um desafio: mostra o enunciado e prepara o editor.
    comSolucao=true já revela a solução (usado na demonstração inicial). */
 function selecionarDesafio(idx, { comSolucao = false } = {}) {
@@ -74,6 +90,7 @@ function selecionarDesafio(idx, { comSolucao = false } = {}) {
   const d = DESAFIOS[idx];
   cenarioAtual = { entrada: d.entrada.slice(), memoria: { ...d.memoria } };
   document.getElementById('sel-desafio').value = String(idx);
+  document.getElementById('inbox-edit').value = d.entrada.join(', ');
   document.getElementById('desafio-enunciado').textContent = d.enunciado;
   document.getElementById('desafio-esperado').textContent = 'Esperado — ' + d.esperado;
   workspace.clear();
@@ -244,4 +261,5 @@ window.addEventListener('load', () => {
   document.getElementById('btn-reset').addEventListener('click', reiniciar);
   document.getElementById('btn-tentar').addEventListener('click', () => selecionarDesafio(desafioAtual));
   document.getElementById('btn-solucao').addEventListener('click', carregarSolucao);
+  document.getElementById('inbox-edit').addEventListener('change', aplicarInboxEditado);
 });
