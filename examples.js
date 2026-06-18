@@ -96,6 +96,26 @@ const DESAFIOS = [
       _lbl('fim'),
     ],
   },
+  {
+    titulo: '6 · Laço com beq: soma de 1 até N',
+    enunciado: 'Leia um número N e envie para a Saída a soma 1 + 2 + … + N.',
+    dica: 'Use um acumulador (um registrador começa em 0) e um contador. A cada ' +
+          'volta do laço, some o contador ao acumulador e diminua o contador em 1, ' +
+          'até ele chegar a 0; aí mostre o acumulador.',
+    entrada: [5],
+    memoria: {},
+    esperado: 'Saída: 15',
+    solucao: [
+      _in(1),               // x1 = N (contador)
+      _lbl('loop'),
+      _beq(1, 0, 'fim'),    // contador == 0? termina
+      _add(2, 2, 1),        // soma += contador  (x2 começa em 0)
+      _addi(1, 1, -1),      // contador -= 1
+      _beq(0, 0, 'loop'),   // salto incondicional
+      _lbl('fim'),
+      _out(2),              // mostra a soma
+    ],
+  },
 ];
 
 window.DESAFIOS = DESAFIOS;

@@ -76,6 +76,7 @@ cenário (valores na Entrada e na memória).
 | 3 | Diferença (a − b)                | `sub` e ordem dos operandos               |
 | 4 | Memória: ler, alterar, guardar   | `lw` / `sw` (ciclo load–modify–store)     |
 | 5 | Laço com `beq`: contagem regressiva | rótulos, desvio condicional e salto incondicional (`beq x0, x0, loop`) |
+| 6 | Laço com `beq`: soma de 1 até N  | acumulador + contador num laço          |
 
 ---
 

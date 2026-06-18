@@ -136,7 +136,9 @@ function atualizarValores() {
 
 /* ---------- 3. Motor de animação ---------- */
 const esperar = (ms) => new Promise(r => setTimeout(r, ms));
-const velocidade = () => parseInt(document.getElementById('velocidade').value, 10);
+// O slider representa velocidade: à direita = mais rápido. Convertemos para
+// tempo de espera invertendo dentro da faixa (min + max = 1800).
+const velocidade = () => 1800 - parseInt(document.getElementById('velocidade').value, 10);
 const narrar = (txt) => { document.getElementById('narrador').textContent = txt; };
 
 function limparDestaques() {
