@@ -116,6 +116,15 @@ const DESAFIOS = [
       _out(2),              // mostra a soma
     ],
   },
+  {
+    titulo: 'Modo livre',
+    livre: true,
+    enunciado: 'Sem enunciado: monte o programa que quiser. Edite a Entrada, a ' +
+               'memória e os registradores à vontade e execute.',
+    entrada: [],
+    memoria: {},
+    // sem solução e sem resultado esperado
+  },
 ];
 
 window.DESAFIOS = DESAFIOS;

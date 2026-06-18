@@ -69,6 +69,10 @@ cenário (valores na Entrada e na memória).
 - **Tentar do zero** — limpa o editor para você montar a sua solução.
 - **Ver solução** — se travar, revela uma solução pronta no editor.
 
+Há também o **Modo livre** no seletor: sem enunciado nem solução — um editor em
+branco para montar e testar o que quiser, com Entrada, memória e registradores
+totalmente editáveis.
+
 | # | Desafio                          | Conceito                                  |
 | - | -------------------------------- | ----------------------------------------- |
 | 1 | Soma de dois números             | `in`, `add`, `out`                        |

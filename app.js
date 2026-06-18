@@ -106,6 +106,7 @@ function aplicarRegistradorEditado(idx, el) {
 function selecionarDesafio(idx, { comSolucao = false } = {}) {
   desafioAtual = idx;
   const d = DESAFIOS[idx];
+  const livre = !!d.livre;
   cenarioAtual = {
     entrada: d.entrada.slice(),
     memoria: { ...d.memoria },
@@ -114,20 +115,33 @@ function selecionarDesafio(idx, { comSolucao = false } = {}) {
   document.getElementById('sel-desafio').value = String(idx);
   document.getElementById('inbox-edit').value = d.entrada.join(', ');
   document.getElementById('desafio-enunciado').textContent = d.enunciado;
-  document.getElementById('desafio-esperado').textContent = 'Esperado — ' + d.esperado;
+
+  // No modo livre não há solução nem resultado esperado.
+  document.getElementById('btn-solucao').style.display = livre ? 'none' : '';
+  document.getElementById('btn-tentar').textContent = livre ? 'Limpar editor' : 'Tentar do zero';
+  const esperadoEl = document.getElementById('desafio-esperado');
+  if (livre || !d.esperado) {
+    esperadoEl.style.display = 'none';
+  } else {
+    esperadoEl.style.display = '';
+    esperadoEl.textContent = 'Esperado — ' + d.esperado;
+  }
+
   workspace.clear();
-  if (comSolucao) {
+  if (comSolucao && !livre) {
     carregarSolucao();
   } else {
     prepararCenario();
-    narrar(d.dica ? ('Tente montar você mesmo. Dica: ' + d.dica)
-                  : 'Monte seu programa e clique em "Passo".');
+    narrar(livre ? 'Modo livre: monte o programa que quiser, edite o estado e execute.'
+                 : (d.dica ? ('Tente montar você mesmo. Dica: ' + d.dica)
+                           : 'Monte seu programa e clique em "Passo".'));
   }
 }
 
 /* Revela a solução do desafio atual no editor. */
 function carregarSolucao() {
   const d = DESAFIOS[desafioAtual];
+  if (!d.solucao) { narrar('Este modo não tem solução pronta.'); return; }
   workspace.clear();
   const dom = Blockly.utils.xml.textToDom(programaXml(d.solucao));
   Blockly.Xml.domToWorkspace(dom, workspace);
