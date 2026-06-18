@@ -11,7 +11,7 @@ let workspace = null;
 let animando  = false;   // trava p/ não sobrepor animações
 let programaCarregado = false;
 let desafioAtual = 0;
-let cenarioAtual = { entrada: [], memoria: {} };   // I/O + memória do desafio atual
+let cenarioAtual = { entrada: [], memoria: {}, registradores: {} };   // estado inicial do desafio
 
 /* Tema escuro do Blockly, para combinar com o painel do simulador. */
 const TEMA_RISCV = Blockly.Theme.defineTheme('riscv-dark', {
@@ -59,6 +59,7 @@ function prepararCenario() {
   maquina.reset();
   maquina.definirEntrada(cenarioAtual.entrada);
   Object.entries(cenarioAtual.memoria).forEach(([e, v]) => { maquina.memoria[+e] = v; });
+  Object.entries(cenarioAtual.registradores).forEach(([r, v]) => { maquina.setReg(+r, v); });
   programaCarregado = false;
   animando = false;
   limparDestaques();
@@ -91,12 +92,25 @@ function aplicarMemoriaEditada(end, el) {
   narrar(`MEM[${end}] definido como ${v}. Clique em "Passo" para executar.`);
 }
 
+/* Define o valor inicial de um registrador e reprepara o cenário. */
+function aplicarRegistradorEditado(idx, el) {
+  if (idx === 0) return;   // x0 é fixo em 0 (RISC-V)
+  const v = /^-?\d+$/.test(el.value.trim()) ? parseInt(el.value, 10) : 0;
+  cenarioAtual.registradores[idx] = v;
+  prepararCenario();
+  narrar(`x${idx} definido como ${v}. Clique em "Passo" para executar.`);
+}
+
 /* Seleciona um desafio: mostra o enunciado e prepara o editor.
    comSolucao=true já revela a solução (usado na demonstração inicial). */
 function selecionarDesafio(idx, { comSolucao = false } = {}) {
   desafioAtual = idx;
   const d = DESAFIOS[idx];
-  cenarioAtual = { entrada: d.entrada.slice(), memoria: { ...d.memoria } };
+  cenarioAtual = {
+    entrada: d.entrada.slice(),
+    memoria: { ...d.memoria },
+    registradores: { ...(d.registradores || {}) },
+  };
   document.getElementById('sel-desafio').value = String(idx);
   document.getElementById('inbox-edit').value = d.entrada.join(', ');
   document.getElementById('desafio-enunciado').textContent = d.enunciado;
@@ -123,16 +137,23 @@ function carregarSolucao() {
 
 /* ---------- 2. Desenha o painel de estado (componentes fixos) ---------- */
 function montarPaineis() {
-  // Registradores x0..x7
+  // Registradores x0..x7 — valores editáveis (x0 é fixo em 0)
   const reg = document.getElementById('reg-grid');
   reg.innerHTML = '';
   for (let i = 0; i < NUM_REGISTRADORES; i++) {
     reg.insertAdjacentHTML('beforeend', `
       <div class="reg-cel${i === 0 ? ' reg-zero' : ''}" id="reg-${i}">
         <div class="reg-nome">x${i}</div>
-        <div class="reg-valor" id="reg-${i}-v">0</div>
+        <input class="reg-valor reg-input" id="reg-${i}-v" data-reg="${i}"
+               inputmode="numeric" value="0" ${i === 0 ? 'readonly' : ''}
+               title="${i === 0 ? 'x0 é sempre 0 (RISC-V)' : `Valor de x${i} — clique para editar`}" />
       </div>`);
   }
+  // Edição de qualquer registrador (delegação de evento).
+  reg.addEventListener('change', (e) => {
+    if (e.target.classList.contains('reg-input'))
+      aplicarRegistradorEditado(parseInt(e.target.dataset.reg, 10), e.target);
+  });
   // Memória de dados MEM[0..23] — valores editáveis
   const mem = document.getElementById('mem-grid');
   mem.innerHTML = '';
@@ -156,8 +177,10 @@ function montarPaineis() {
    sem destruir os elementos (para não perder os destaques). */
 function atualizarValores() {
   document.getElementById('pc-valor').textContent = maquina.pc;
-  for (let i = 0; i < NUM_REGISTRADORES; i++)
-    document.getElementById(`reg-${i}-v`).textContent = maquina.reg(i);
+  for (let i = 0; i < NUM_REGISTRADORES; i++) {
+    const el = document.getElementById(`reg-${i}-v`);
+    if (el !== document.activeElement) el.value = maquina.reg(i);   // não atrapalha a digitação
+  }
   for (let i = 0; i < NUM_ARMARIOS; i++) {
     const el = document.getElementById(`mem-${i}-v`);
     if (el !== document.activeElement) el.value = maquina.memoria[i];   // não atrapalha a digitação
@@ -201,9 +224,10 @@ function garantirPrograma() {
     return false;
   }
   maquina.carregarPrograma(programa);
-  // Cenário do desafio atual: entrada da I/O e memória pré-carregada.
+  // Cenário do desafio atual: entrada da I/O, memória e registradores iniciais.
   maquina.definirEntrada(cenarioAtual.entrada);
   Object.entries(cenarioAtual.memoria).forEach(([e, v]) => { maquina.memoria[+e] = v; });
+  Object.entries(cenarioAtual.registradores).forEach(([r, v]) => { maquina.setReg(+r, v); });
   atualizarValores();
   programaCarregado = true;
   return true;

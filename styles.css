@@ -200,6 +200,15 @@ em { font-style: normal; color: var(--muted); }
 }
 .reg-cel .reg-nome { font-family: var(--mono); font-size: .66rem; color: var(--reg); font-weight: 500; }
 .reg-cel .reg-valor { font-family: var(--mono); font-size: 1.02rem; font-weight: 700; margin-top: 2px; }
+.reg-input {
+  width: 100%; border: 1px solid transparent; background: transparent;
+  color: var(--text); text-align: center; padding: 1px 0; border-radius: 4px;
+  cursor: text; -moz-appearance: textfield;
+}
+.reg-input:hover { border-color: var(--border-2); }
+.reg-input:focus { outline: none; border-color: var(--accent); background: var(--bg-elev-2); }
+.reg-input[readonly] { cursor: default; }
+.reg-input[readonly]:hover { border-color: transparent; }
 .reg-cel.reg-zero { opacity: .55; }
 .reg-cel.reg-zero .reg-nome { color: var(--faint); }
 

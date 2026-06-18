@@ -123,6 +123,9 @@ aluno ver a causa antes do efeito.
 - **Reiniciar** — recarrega o cenário e zera o estado, mantendo os blocos.
 - **Velocidade** — ajusta o tempo de cada fase.
 
+O estado inicial é editável direto no painel: o campo **Definir entrada**, e os
+valores das células de **memória** e dos **registradores** (`x0` é fixo em 0).
+
 ---
 
 ## Limitações conhecidas
